@@ -305,10 +305,8 @@ function carregarPainelAlerta(globalIdLocalSelecionado) {
           return;
         }
 
-        const alertas = listaAlertas.filter(a =>
-          String(a.idAreaAviso).toUpperCase() === String(idAreaAviso).toUpperCase()
-        );
-
+        const alertas = listaAlertas.filter(a => a.name?.toLowerCase().includes("lisboa")
+);
         const alertasVisiveis = alertas.length > 0 ? alertas : listaAlertas;
 
         const tipoTempoId = previsaoData.data[0].idWeatherType;
