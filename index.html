@@ -200,15 +200,19 @@ function carregarPainelAlerta(globalIdLocalSelecionado) {
           return;
         }
 
-        if (!Array.isArray(alertasData?.data)) {
-  console.warn("⚠️ Estrutura inesperada em alertasData:", alertasData);
-  container.innerHTML += '<p style="color:red;">❌ Estrutura inesperada nos dados de alertas.</p>';
+        const listaAlertas = Array.isArray(alertasData?.data)
+  ? alertasData.data
+  : Array.isArray(alertasData?.alerts)
+    ? alertasData.alerts
+    : [];
+
+if (listaAlertas.length === 0) {
+  container.innerHTML += '<p style="color:orange;">⚠️ Sem dados de alertas disponíveis para este local.</p>';
   return;
 }
 
-const alertas = alertasData.data.filter(a => {
-  // comparar como string para tolerância máxima
-  return String(a.idAreaAviso).toUpperCase() === String(idAreaAviso).toUpperCase();
+const alertas = listaAlertas.filter(a => String(a.idAreaAviso).toUpperCase() === String(idAreaAviso).toUpperCase());
+
 });
 
 // se ainda assim não houver correspondência, mostra todos
