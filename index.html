@@ -268,6 +268,84 @@ function carregarPrevisao(globalIdLocal) {
 }
 </script>
 
+  // Painel de Distritos com Alertas Ativos
+
+  <script>
+function mostrarDistritosComAlertas() {
+  const container = document.getElementById('alertasAtivos');
+  container.innerHTML = '<h3>📍 Distritos com Alertas Ativos</h3>';
+
+  fetch('https://api.ipma.pt/open-data/forecast/warnings/warnings_www.json')
+    .then(r => r.json())
+    .then(alertasData => {
+      // Combina alertas de estrutura por chave e por array
+      const conjuntos = [];
+
+      // 1️⃣ Alertas por chave (tipo "LSB")
+      for (const codigo in alertasData) {
+        if (Array.isArray(alertasData[codigo]) && alertasData[codigo].length > 0) {
+          const nome = alertasData[codigo][0]?.name || codigo;
+          conjuntos.push({ nome, alertas: alertasData[codigo] });
+        }
+      }
+
+      // 2️⃣ Alertas por array global (tipo data[])
+      if (Array.isArray(alertasData?.data)) {
+        const agrupados = {};
+        alertasData.data.forEach(a => {
+          const id = a.idAreaAviso;
+          if (!agrupados[id]) agrupados[id] = [];
+          agrupados[id].push(a);
+        });
+        for (const id in agrupados) {
+          const nome = agrupados[id][0]?.name || id;
+          conjuntos.push({ nome, alertas: agrupados[id] });
+        }
+      }
+
+      if (conjuntos.length === 0) {
+        container.innerHTML += '<p>✅ Nenhum distrito com alertas ativos neste momento.</p>';
+        return;
+      }
+
+      conjuntos.sort((a, b) => a.nome.localeCompare(b.nome)); // Ordena alfabeticamente
+
+      const html = conjuntos.map(grupo => {
+        const nome = grupo.nome;
+        const alertaLista = grupo.alertas.map(a => {
+          const cor = {
+            green: '#2ca02c',
+            yellow: '#ffcc00',
+            orange: '#ff7f0e',
+            red: '#d62728'
+          }[a.awarenessLevelID?.toLowerCase()] || '#999';
+
+          return `
+            <li>
+              <strong>${a.awarenessTypeName || 'Alerta Meteorológico'}</strong><br>
+              <span style="color:${cor}; font-weight:bold;">${a.awarenessLevelID?.toUpperCase() || '—'}</span>
+              <em> (${a.startTime} → ${a.endTime})</em>
+            </li>
+          `;
+        }).join('');
+
+        return `
+          <details style="margin-bottom:15px; border-left:4px solid #ccc; padding-left:10px;">
+            <summary style="font-weight:bold; cursor:pointer;">📍 ${nome} (${grupo.alertas.length})</summary>
+            <ul>${alertaLista}</ul>
+          </details>
+        `;
+      }).join('');
+
+      container.innerHTML += html;
+    })
+    .catch(err => {
+      console.error("❌ Erro ao obter alertas:", err);
+      container.innerHTML += '<p style="color:red;">❌ Falha ao carregar distritos com alertas (ver consola).</p>';
+    });
+}
+</script>
+  
 <script>
 function carregarPainelAlerta(globalIdLocalSelecionado) {
   const container = document.getElementById('alertas');
