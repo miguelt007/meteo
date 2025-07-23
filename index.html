@@ -293,6 +293,16 @@ function carregarPainelAlerta(globalIdLocalSelecionado) {
         const alertasVisiveis = Array.isArray(alertasData?.[nomeDistrito])
           ? alertasData[nomeDistrito]
           : [];
+        const nomeDistrito = entrada.local.trim().toUpperCase();
+        const debugData = alertasData[nomeDistrito];
+
+container.innerHTML += `
+  <details style="margin-top:20px; background:#f9f9f9; padding:10px; border:1px solid #ccc;">
+    <summary style="cursor:pointer; font-weight:bold;">🔍 Ver dados brutos da API para ${nomeDistrito}</summary>
+    <pre style="font-size:12px; white-space:pre-wrap;">${JSON.stringify(debugData, null, 2)}</pre>
+  </details>
+`;
+        console.log("📋 Chaves disponíveis na API:", Object.keys(alertasData));
 
         const tipoTempoId = previsaoData.data?.[0]?.idWeatherType;
         const fenomeno = tiposData?.data?.find(t => t.idWeatherType === tipoTempoId)?.descIdWeatherTypePT;
