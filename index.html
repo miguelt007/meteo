@@ -36,6 +36,7 @@
   <label for="cidadeSelect">Escolhe uma cidade:</label>
   <select id="cidadeSelect"></select>
 
+  <div id="alertas"></div>
   <div id="alertasAtivos">
   <div id="riscoIncendio"></div>
 
@@ -268,7 +269,9 @@ function carregarPrevisao(globalIdLocal) {
 }
 </script>
 
-    
+    <!-- Local onde os alertas ativos vão ser mostrados -->
+<div id="alertasAtivos"></div>
+
 <script>
 function mostrarDistritosComAlertas() {
   const container = document.getElementById('alertasAtivos');
