@@ -11,105 +11,85 @@
       padding: 20px;
       transition: background-color 0.3s, color 0.3s;
     }
-
     .grafico-container, #alertas, #riscoIncendio, #alertasAtivos, #ventoInfo, #estadoNacional, #sismos {
       max-width: 700px;
       margin: 40px auto;
       font-size: 16px;
     }
-
     canvas {
       width: 100% !important;
       height: 100% !important;
       min-height: 300px;
     }
-
     select, button {
       font-size: 16px;
       padding: 6px;
       margin-bottom: 10px;
       cursor: pointer;
     }
-
     table {
       width: 100%;
       border-collapse: collapse;
     }
-
     th, td {
       padding: 8px;
       border: 1px solid #ccc;
     }
-
     th {
       background: #f0f0f0;
     }
-
     p.fallback {
       text-align: center;
       font-style: italic;
       color: #888;
     }
-
     body.dark-mode {
       background-color: #121212;
       color: #e0e0e0;
     }
-
     body.dark-mode h2, body.dark-mode h3, body.dark-mode label {
       color: #fff;
     }
-
     body.dark-mode table {
       background-color: #1e1e1e;
       color: #e0e0e0;
     }
-
     body.dark-mode th {
       background-color: #333;
     }
-
     body.dark-mode td {
       border-color: #444;
     }
-
     body.dark-mode a {
       color: #90caf9;
     }
-
     body.dark-mode button {
       background-color: #333;
       color: #fff;
       border: 1px solid #555;
     }
-
     @media (max-width: 768px) {
       body {
         padding: 10px;
         font-size: 16px;
       }
-
       h2, h3 {
         font-size: 20px;
       }
-
       select, button {
         width: 100%;
         font-size: 18px;
         padding: 10px;
         margin-bottom: 15px;
       }
-
       .grafico-container {
         height: 300px;
       }
-
       #sismos table {
         display: block;
         overflow-x: auto;
         white-space: nowrap;
       }
-
       #sismos th, #sismos td {
         font-size: 14px;
         padding: 6px;
@@ -123,8 +103,8 @@
   <label for="cidadeSelect">Escolhe uma cidade:</label>
   <select id="cidadeSelect"></select>
 
-  <!-- Indicador de Estado Nacional -->
-  <div id="estadoNacional" style="font-weight:bold; font-size:16px; max-width:700px; margin:40px auto;"></div>
+  <!-- Indicador de Estado Nacional (semáforo) -->
+  <div id="estadoNacional" style="max-width:700px; margin:40px auto; font-size:16px;"></div>
 
   <!-- Painel de distritos com alertas ativos -->
   <div id="alertasAtivos" style="max-width:700px; margin:40px auto; font-size:16px;"></div>
@@ -147,17 +127,21 @@
   <!-- Direção e Intensidade do Vento -->
   <div id="ventoInfo"></div>
 
-  <!-- Gráfico de UV -->
+  <!-- Gráfico de Índice UV -->
   <div id="graficoUVWrapper" class="grafico-container">
     <canvas id="graficoUV"></canvas>
   </div>
-  <p id="mensagemUV" class="fallback" style="display:none;">❌ Sem dados de índice UV disponíveis.</p>
+  <p id="mensagemUV" class="fallback" style="display:none;">
+    ❌ Sem dados de índice UV disponíveis.
+  </p>
 
   <!-- Gráfico de Humidade -->
   <div id="graficoHumidadeWrapper" class="grafico-container">
     <canvas id="graficoHumidade"></canvas>
   </div>
-  <p id="mensagemHumidade" class="fallback" style="display:none;">❌ Sem dados de humidade relativa disponíveis.</p>
+  <p id="mensagemHumidade" class="fallback" style="display:none;">
+    ❌ Sem dados de humidade relativa disponíveis.
+  </p>
   <!-- Painel de Sismos -->
   <div id="sismos">
     <h3>🌍 Últimos 10 Sismos em Portugal Continental</h3>
@@ -177,6 +161,35 @@
       Fonte: <a href="https://www.ipma.pt/pt/geofisica/sismicidade/" target="_blank">IPMA – Mapa de Sismicidade</a>
     </p>
   </div>
+<script>
+  // Modo escuro
+  document.getElementById('toggleDarkMode').addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+  });
+
+  // Carregar cidades IPMA
+  const select = document.getElementById('cidadeSelect');
+  let graficoTemperaturas, graficoPrecipitacao, graficoUV, graficoHumidade;
+
+  fetch('https://api.ipma.pt/open-data/distrits-islands.json')
+    .then(res => res.json())
+    .then(data => {
+      data.data.forEach(cidade => {
+        const opt = document.createElement('option');
+        opt.value = cidade.globalIdLocal;
+        opt.textContent = cidade.local;
+        select.appendChild(opt);
+      });
+
+      // Lisboa como valor inicial
+      select.value = 1110600;
+      carregarPrevisao(select.value);
+    });
+
+  select.addEventListener('change', () => {
+    carregarPrevisao(select.value);
+  });
+</script>
 <script>
 function carregarPrevisao(globalIdLocal) {
   const url = `https://api.ipma.pt/open-data/forecast/meteorology/cities/daily/${globalIdLocal}.json`;
@@ -331,7 +344,7 @@ function carregarPrevisao(globalIdLocal) {
       ventoHTML += '</div>';
       document.getElementById('ventoInfo').innerHTML = ventoHTML;
 
-      // Chamadas finais
+      // Painéis complementares
       carregarPainelAlerta(globalIdLocal);
       mostrarRiscoIncendio();
       carregarSismos();
@@ -339,69 +352,82 @@ function carregarPrevisao(globalIdLocal) {
 }
 </script>
 <script>
-function carregarPainelAlerta(globalIdLocalSelecionado) {
-  const container = document.getElementById('alertas');
-  container.innerHTML = '<h3>⚠️ Alertas Meteorológicos</h3>';
+function mostrarDistritosComAlertas() {
+  const container = document.getElementById('alertasAtivos');
+  container.innerHTML = '<h3>📍 Distritos com Alertas Ativos</h3>';
 
-  fetch('https://api.ipma.pt/open-data/distrits-islands.json')
-    .then(res => res.json())
-    .then(lista => {
-      const entrada = lista?.data?.find(e => e.globalIdLocal == globalIdLocalSelecionado);
-      if (!entrada) {
-        container.innerHTML += '<p style="color:red;">❌ Distrito não encontrado.</p>';
+  fetch('https://api.ipma.pt/open-data/forecast/warnings/warnings_www.json')
+    .then(r => r.json())
+    .then(alertasData => {
+      const conjuntos = [];
+
+      for (const codigo in alertasData) {
+        if (Array.isArray(alertasData[codigo]) && alertasData[codigo].length > 0) {
+          const nome = alertasData[codigo][0]?.name || codigo;
+          conjuntos.push({ nome, alertas: alertasData[codigo] });
+        }
+      }
+
+      if (Array.isArray(alertasData?.data)) {
+        const agrupados = {};
+        alertasData.data.forEach(a => {
+          const id = a.idAreaAviso;
+          if (!agrupados[id]) agrupados[id] = [];
+          agrupados[id].push(a);
+        });
+        for (const id in agrupados) {
+          const nome = agrupados[id][0]?.name || id;
+          conjuntos.push({ nome, alertas: agrupados[id] });
+        }
+      }
+
+      if (conjuntos.length === 0) {
+        container.innerHTML += '<p>✅ Nenhum distrito com alertas ativos neste momento.</p>';
         return;
       }
 
-      const nomeDistrito = entrada.local.trim();
-      const idAreaAvisoCodigo = entrada.idAreaAviso?.trim().toUpperCase();
+      conjuntos.sort((a, b) => a.nome.localeCompare(b.nome));
 
-      Promise.all([
-        fetch('https://api.ipma.pt/open-data/forecast/warnings/warnings_www.json').then(r => r.json()),
-        fetch(`https://api.ipma.pt/open-data/forecast/meteorology/cities/daily/${globalIdLocalSelecionado}.json`).then(r => r.json()),
-        fetch('https://api.ipma.pt/open-data/weather-type-classe.json').then(r => r.json())
-      ])
-      .then(([alertasData, previsaoData, tiposData]) => {
-        const alertasDiretos = Array.isArray(alertasData?.[idAreaAvisoCodigo]) ? alertasData[idAreaAvisoCodigo] : [];
-        const alertasGlobais = Array.isArray(alertasData?.data)
-          ? alertasData.data.filter(a => a.idAreaAviso?.trim().toUpperCase() === idAreaAvisoCodigo)
-          : [];
+      const html = conjuntos.map(grupo => {
+        const nome = grupo.nome;
+        const alertaLista = grupo.alertas.map(a => {
+          const cor = {
+            green: '#2ca02c',
+            yellow: '#ffcc00',
+            orange: '#ff7f0e',
+            red: '#d62728'
+          }[a.awarenessLevelID?.toLowerCase()] || '#999';
 
-        const alertasVisiveis = [...alertasDiretos, ...alertasGlobais];
+          return `
+            <li>
+              <strong>${a.awarenessTypeName || 'Alerta Meteorológico'}</strong><br>
+              <span style="color:${cor}; font-weight:bold;">${a.awarenessLevelID?.toUpperCase() || '—'}</span>
+              <em> (${a.startTime} → ${a.endTime})</em>
+            </li>
+          `;
+        }).join('');
 
-        const tipoTempoId = previsaoData.data?.[0]?.idWeatherType;
-        const fenomeno = tiposData?.data?.find(t => t.idWeatherType === tipoTempoId)?.descIdWeatherTypePT;
+        return `
+          <details style="margin-bottom:15px; border-left:4px solid #ccc; padding-left:10px;">
+            <summary style="font-weight:bold; cursor:pointer;">📍 ${nome} (${grupo.alertas.length})</summary>
+            <ul>${alertaLista}</ul>
+          </details>
+        `;
+      }).join('');
 
-        let html = `<strong>${nomeDistrito}</strong><br>`;
-
-        if (alertasVisiveis.length === 0) {
-          html += `<p style="color:green;">✅ Sem alertas meteorológicos ativos para ${nomeDistrito}.</p>`;
-        } else {
-          html += '<ul>';
-          alertasVisiveis.forEach(a => {
-            const cor = {
-              green: '#2ca02c',
-              yellow: '#ffcc00',
-              orange: '#ff7f0e',
-              red: '#d62728'
-            }[a.awarenessLevelID?.toLowerCase()] || '#999';
-
-            html += `
-              <li style="margin-bottom:10px;">
-                <strong>${a.awarenessTypeName || 'Alerta Meteorológico'}</strong><br>
-                <span style="color:${cor}; font-weight:bold;">Nível: ${a.awarenessLevelID?.toUpperCase() || '—'}</span><br>
-                <em>${a.startTime} → ${a.endTime}</em><br>
-                ${a.text ? `<p>${a.text}</p>` : ''}
-              </li>
-            `;
-          });
-          html += '</ul>';
-        }
-
-        html += `<p>📌 Fenómeno previsto: <em>${fenomeno || "Não disponível"}</em></p>`;
-        container.innerHTML += html;
-      });
+      container.innerHTML += html;
+    })
+    .catch(err => {
+      console.error("❌ Erro ao obter alertas:", err);
+      container.innerHTML += '<p style="color:red;">❌ Falha ao carregar distritos com alertas (ver consola).</p>';
     });
 }
+</script>
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+  verificarEstadoNacional();
+  mostrarDistritosComAlertas();
+});
 </script>
 <script>
 function verificarEstadoNacional() {
@@ -440,8 +466,7 @@ function verificarEstadoNacional() {
       container.innerHTML = '<span style="color:red;">❌ Erro ao verificar estado nacional</span>';
     });
 }
-</script>
-<script>
+
 function carregarSismos() {
   fetch('https://api.ipma.pt/open-data/observation/seismic/3.json')
     .then(res => res.text())
@@ -484,12 +509,6 @@ function mostrarRiscoIncendio() {
     <p><a href="https://www.ipma.pt/en/riscoincendio/rcm.pt/" target="_blank" style="font-weight:bold; color:#e15759;">🗺️ Ver Mapa de Risco de Incêndio</a></p>
   `;
 }
-</script>
-<script>
-window.addEventListener('DOMContentLoaded', () => {
-  verificarEstadoNacional();
-  mostrarDistritosComAlertas();
-});
 </script>
 </body>
 </html>
