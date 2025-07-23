@@ -173,6 +173,7 @@
     carregarPrevisao(select.value);
   });
   
+<script>
 function carregarPainelAlerta(globalIdLocalSelecionado) {
   const container = document.getElementById('alertas');
   container.innerHTML = '<h3>⚠️ Alertas Meteorológicos</h3>';
@@ -180,7 +181,7 @@ function carregarPainelAlerta(globalIdLocalSelecionado) {
   fetch('https://api.ipma.pt/open-data/distrits-islands.json')
     .then(res => res.json())
     .then(lista => {
-      const entrada = lista.data.find(e => e.globalIdLocal == globalIdLocalSelecionado);
+      const entrada = lista?.data?.find(e => e.globalIdLocal == globalIdLocalSelecionado);
       if (!entrada) {
         container.innerHTML += '<p style="color:red;">❌ Distrito não encontrado.</p>';
         return;
@@ -194,17 +195,21 @@ function carregarPainelAlerta(globalIdLocalSelecionado) {
         fetch('https://api.ipma.pt/open-data/weather-type-classe.json').then(r => r.json())
       ])
       .then(([alertasData, previsaoData, tiposData]) => {
-        console.log("🔍 Dados recebidos:", previsaoData);
+        console.log("✅ Dados recebidos:", { alertasData, previsaoData, tiposData });
 
-        // 🔒 Verificação segura antes de usar previsaoData.data[0]
-        if (!previsaoData || !previsaoData.data || previsaoData.data.length === 0) {
+        if (!previsaoData || !Array.isArray(previsaoData.data) || previsaoData.data.length === 0) {
           container.innerHTML += '<p style="color:red;">❌ Não há dados meteorológicos disponíveis para esta cidade.</p>';
+          return;
+        }
+
+        if (!alertasData || !Array.isArray(alertasData.data)) {
+          container.innerHTML += '<p style="color:red;">❌ Dados de alertas indisponíveis ou malformados.</p>';
           return;
         }
 
         const alertas = alertasData.data.filter(a => a.idAreaAviso === idAreaAviso);
         const tipoTempoId = previsaoData.data[0].idWeatherType;
-        const fenomeno = tiposData.data.find(t => t.idWeatherType === tipoTempoId)?.descIdWeatherTypePT;
+        const fenomeno = tiposData?.data?.find(t => t.idWeatherType === tipoTempoId)?.descIdWeatherTypePT;
 
         let html = `<strong>${local}</strong><br>`;
 
@@ -251,6 +256,7 @@ function carregarPainelAlerta(globalIdLocalSelecionado) {
     });
 }
 </script>
+
 
  <script> 
   function carregarPrevisao(globalIdLocal) {
