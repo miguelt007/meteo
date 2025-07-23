@@ -451,18 +451,6 @@ function carregarPrevisao(globalIdLocal) {
 </script>
 
 <script>
-function mostrarRiscoIncendio() {
-  const container = document.getElementById('riscoIncendio');
-  container.innerHTML = `
-    <h3>🔥 Risco de Incêndio Rural</h3>
-    <p>Hoje, <strong>mais de 50 municípios</strong> estão em <span style="color:#d62728; font-weight:bold;">risco máximo</span> de incêndio, especialmente nos distritos de <strong>Bragança, Viseu, Guarda, Castelo Branco, Portalegre</strong> e <strong>Santarém</strong>.</p>
-    <p>Outros <strong>50 municípios</strong> estão em <span style="color:#ff7f0e; font-weight:bold;">risco muito elevado</span>, incluindo zonas de <strong>Vila Real, Coimbra, Beja</strong> e <strong>Faro</strong>.</p>
-    <p>Consulta o mapa oficial do IPMA para ver o risco por concelho:</p>
-    <p><a href="https://www.ipma.pt/en/riscoincendio/rcm.pt/" target="_blank" style="font-weight:bold; color:#e15759;">🗺️ Ver Mapa de Risco de Incêndio</a></p>
-  `;
-}
-</script>
-<script>
 function carregarSismos() {
   fetch('https://api.ipma.pt/open-data/observation/seismic/3.json')
     .then(res => res.text())
@@ -495,50 +483,17 @@ function carregarSismos() {
     });
 }
 
-      const sismos = Array.isArray(dataJSON.data) ? dataJSON.data.slice(0, 10) : [];
-      const tbody = document.querySelector('#tabelaSismos tbody');
-      tbody.innerHTML = '';
-
-      sismos.forEach(sismo => {
-        const linha = document.createElement('tr');
-        linha.innerHTML = `
-          <td>${sismo.time || '—'}</td>
-          <td>${sismo.local && sismo.local.trim() !== '' ? sismo.local : '—'}</td>
-          <td>${sismo.magnitud ?? '—'}</td>
-          <td>${sismo.depth ? sismo.depth + ' km' : '—'}</td>
-          <td>${sismo.lat} N, ${sismo.lon} W</td>
-        `;
-        tbody.appendChild(linha);
-      });
-    })
-    .catch(err => {
-      console.error("❌ Erro de rede ou fetch:", err);
-      document.getElementById('sismos').innerHTML += '<p style="color:red;">❌ Não foi possível carregar os dados sísmicos.</p>';
-    });
+function mostrarRiscoIncendio() {
+  const container = document.getElementById('riscoIncendio');
+  container.innerHTML = `
+    <h3>🔥 Risco de Incêndio Rural</h3>
+    <p>Hoje, <strong>mais de 50 municípios</strong> estão em <span style="color:#d62728; font-weight:bold;">risco máximo</span> de incêndio, especialmente nos distritos de <strong>Bragança, Viseu, Guarda, Castelo Branco, Portalegre</strong> e <strong>Santarém</strong>.</p>
+    <p>Outros <strong>50 municípios</strong> estão em <span style="color:#ff7f0e; font-weight:bold;">risco muito elevado</span>, incluindo zonas de <strong>Vila Real, Coimbra, Beja</strong> e <strong>Faro</strong>.</p>
+    <p>Consulta o mapa oficial do IPMA para ver o risco por concelho:</p>
+    <p><a href="https://www.ipma.pt/en/riscoincendio/rcm.pt/" target="_blank" style="font-weight:bold; color:#e15759;">🗺️ Ver Mapa de Risco de Incêndio</a></p>
+  `;
 }
 
-    .then(data => {
-      const sismos = Array.isArray(data.data) ? data.data.slice(0, 10) : [];
-      const tbody = document.querySelector('#tabelaSismos tbody');
-      tbody.innerHTML = '';
-
-      sismos.forEach(sismo => {
-        const linha = document.createElement('tr');
-        linha.innerHTML = `
-          <td>${sismo.time || '—'}</td>
-          <td>${sismo.local && sismo.local.trim() !== '' ? sismo.local : '—'}</td>
-          <td>${sismo.magnitud || '—'}</td>
-          <td>${sismo.depth ? `${sismo.depth} km` : '—'}</td>
-          <td>${sismo.lat} N, ${sismo.lon} W</td>
-        `;
-        tbody.appendChild(linha);
-      });
-    })
-    .catch(err => {
-      console.error("❌ Erro ao carregar dados sísmicos:", err);
-      document.getElementById('sismos').innerHTML += '<p style="color:red;">❌ Não foi possível carregar os dados sísmicos.</p>';
-    });
-}
 </script>
 </body>
 </html>
