@@ -466,7 +466,18 @@ function mostrarRiscoIncendio() {
 <script>
 function carregarSismos() {
   fetch('https://api.ipma.pt/open-data/observation/seismic/3.json')
-    .then(res => res.json())
+   .then(res => res.text())
+.then(text => {
+  console.log("📦 Resposta bruta da API:", text);
+
+  try {
+    const data = JSON.parse(text);
+    // continuar normalmente com data.data...
+  } catch (err) {
+    console.error("❌ Erro ao fazer parse do JSON:", err);
+    document.getElementById('sismos').innerHTML += '<p style="color:red;">❌ Resposta inválida da API (ver consola).</p>';
+  }
+})
     .then(data => {
       const sismos = Array.isArray(data.data) ? data.data.slice(0, 10) : [];
       const tbody = document.querySelector('#tabelaSismos tbody');
