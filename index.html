@@ -481,7 +481,7 @@ document.getElementById('cidadeSelect').addEventListener('change', function(e) {
   carregarPainelAlerta(globalIdLocal);
 });
 </script>
-
+<script>
   function mostrarRiscoIncendio() {
     const container = document.getElementById('riscoIncendio');
     container.innerHTML = `
@@ -492,6 +492,7 @@ document.getElementById('cidadeSelect').addEventListener('change', function(e) {
       <p><a href="https://www.ipma.pt/en/riscoincendio/rcm.pt/" target="_blank" style="font-weight:bold; color:#e15759;">🗺️ Ver Mapa de Risco de Incêndio</a></p>
     `;
   }
+  </script>
 <script>
   function carregarSismos() {
     fetch('https://api.ipma.pt/open-data/observation/seismic/3.json')
