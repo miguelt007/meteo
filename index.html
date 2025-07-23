@@ -391,7 +391,6 @@ document.getElementById('ventoInfo').innerHTML = ventoHTML;
   const container = document.getElementById('alertas');
   container.innerHTML = '<h3>⚠️ Alertas Meteorológicos</h3>';
 
-  // Obter idAreaAviso e nome do local
   fetch('https://api.ipma.pt/open-data/distrits-islands.json')
     .then(res => res.json())
     .then(lista => {
@@ -403,68 +402,59 @@ document.getElementById('ventoInfo').innerHTML = ventoHTML;
 
       const { idAreaAviso, local } = entrada;
 
-      // Buscar alertas
-      fetch('https://api.ipma.pt/open-data/forecast/warnings/warnings_www.json')
-        .then(res => res.json())
-        .then(alertasData => {
-          const alertas = alertasData.data.filter(a => a.idAreaAviso === idAreaAviso);
+      Promise.all([
+        fetch('https://api.ipma.pt/open-data/forecast/warnings/warnings_www.json').then(r => r.json()),
+        fetch(`https://api.ipma.pt/open-data/forecast/meteorology/cities/daily/${globalIdLocalSelecionado}.json`).then(r => r.json()),
+        fetch('https://api.ipma.pt/open-data/weather-type-classe.json').then(r => r.json())
+      ])
+      .then(([alertasData, previsaoData, tiposData]) => {
+        const alertas = alertasData.data.filter(a => a.idAreaAviso === idAreaAviso);
+        const tipoTempoId = previsaoData.data[0].idWeatherType;
+        const fenomeno = tiposData.data.find(t => t.idWeatherType === tipoTempoId)?.descIdWeatherTypePT;
 
-          // Buscar previsão local
-          fetch(`https://api.ipma.pt/open-data/forecast/meteorology/cities/daily/${globalIdLocalSelecionado}.json`)
-            .then(res => res.json())
-            .then(previsaoData => {
-              const tipoTempoId = previsaoData.data[0].idWeatherType;
+        let html = `<strong>${local}</strong><br>`;
 
-              // Buscar descrição do fenómeno
-              fetch('https://api.ipma.pt/open-data/weather-type-classe.json')
-                .then(res => res.json())
-                .then(tiposData => {
-                  const fenomeno = tiposData.data.find(t => t.idWeatherType === tipoTempoId)?.descIdWeatherTypePT;
+        if (alertas.length === 0) {
+          html += '<p style="color:green;">✅ Sem alertas meteorológicos ativos.</p>';
+        } else {
+          html += '<ul>';
+          alertas.forEach(a => {
+            const cor = {
+              green: '#2ca02c',
+              yellow: '#ffcc00',
+              orange: '#ff7f0e',
+              red: '#d62728'
+            }[a.awarenessLevelID] || '#999';
 
-                  let html = `<strong>${local}</strong><br>`;
-                  
-                  if (alertas.length === 0) {
-                    html += '<p style="color:green;">✅ Sem alertas meteorológicos ativos.</p>';
-                  } else {
-                    html += '<ul>';
-                    alertas.forEach(a => {
-                      const cor = {
-                        green: '#2ca02c',
-                        yellow: '#ffcc00',
-                        orange: '#ff7f0e',
-                        red: '#d62728'
-                      }[a.awarenessLevelID] || '#999';
+            html += `
+              <li style="margin-bottom:10px;">
+                <strong>${a.awarenessTypeName}</strong><br>
+                <span style="color:${cor}; font-weight:bold;">Nível: ${a.awarenessLevelID.toUpperCase()}</span><br>
+                <em>${a.startTime} → ${a.endTime}</em><br>
+                ${a.text ? `<p>${a.text}</p>` : ''}
+              </li>
+            `;
+          });
+          html += '</ul>';
+        }
 
-                      html += `
-                        <li style="margin-bottom:10px;">
-                          <strong>${a.awarenessTypeName}</strong><br>
-                          <span style="color:${cor}; font-weight:bold;">Nível: ${a.awarenessLevelID.toUpperCase()}</span><br>
-                          <em>${a.startTime} → ${a.endTime}</em><br>
-                          ${a.text ? `<p>${a.text}</p>` : ''}
-                        </li>
-                      `;
-                    });
-                    html += '</ul>';
-                  }
+        if (fenomeno && fenomeno.toLowerCase().includes("trovoada")) {
+          html += `<p>⚡ <strong>Possibilidade de trovoada</strong></p>`;
+        } else {
+          html += `<p>📌 Fenómeno previsto: <em>${fenomeno || "Não disponível"}</em></p>`;
+        }
 
-                  if (fenomeno && fenomeno.toLowerCase().includes("trovoada")) {
-                    html += `<p>⚡ <strong>Possibilidade de trovoada</strong></p>`;
-                  } else {
-                    html += `<p>📌 Fenómeno previsto: <em>${fenomeno || "Não disponível"}</em></p>`;
-                  }
-
-                  container.innerHTML += html;
-                });
-            });
-        })
-        .catch(() => {
-          container.innerHTML += '<p style="color:red;">❌ Erro ao carregar alertas meteorológicos.</p>';
-        });
+        container.innerHTML += html;
+      })
+      .catch(() => {
+        container.innerHTML += '<p style="color:red;">❌ Erro ao carregar dados meteorológicos.</p>';
+      });
     })
     .catch(() => {
       container.innerHTML += '<p style="color:red;">❌ Erro ao obter dados de distritos.</p>';
     });
 }
+
 
   function mostrarRiscoIncendio() {
     const container = document.getElementById('riscoIncendio');
