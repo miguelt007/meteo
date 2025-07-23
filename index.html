@@ -387,42 +387,84 @@ document.getElementById('ventoInfo').innerHTML = ventoHTML;
       });
   }
 
-  function carregarAlertas(globalId) {
-    const container = document.getElementById('alertas');
-    container.innerHTML = '<h3>⚠️ Alertas Meteorológicos</h3>';
-    fetch('https://api.ipma.pt/open-data/forecast/warnings/warnings_www.json')
-      .then(res => res.json())
-      .then(data => {
-        const alertas = data.data.filter(a => a.globalIdLocal == globalId);
-        if (alertas.length === 0) {
-          container.innerHTML += '<p style="color:green;">✅ Sem alertas meteorológicos ativos.</p>';
-          return;
-        }
-        let html = '<ul>';
-        alertas.forEach(a => {
-          const cor = {
-            green: '#2ca02c',
-            yellow: '#ffcc00',
-            orange: '#ff7f0e',
-            red: '#d62728'
-          }[a.awarenessLevelID          ] || '#999';
+  function carregarPainelAlerta(globalIdLocalSelecionado) {
+  const container = document.getElementById('alertas');
+  container.innerHTML = '<h3>⚠️ Alertas Meteorológicos</h3>';
 
-          html += `
-            <li style="margin-bottom:10px;">
-              <strong>${a.awarenessTypeName}</strong><br>
-              <span style="color:${cor}; font-weight:bold;">Nível: ${a.awarenessLevelID.toUpperCase()}</span><br>
-              <em>${a.startTime} → ${a.endTime}</em><br>
-              ${a.text ? `<p>${a.text}</p>` : ''}
-            </li>
-          `;
+  // Obter idAreaAviso e nome do local
+  fetch('https://api.ipma.pt/open-data/distrits-islands.json')
+    .then(res => res.json())
+    .then(lista => {
+      const entrada = lista.data.find(e => e.globalIdLocal == globalIdLocalSelecionado);
+      if (!entrada) {
+        container.innerHTML += '<p style="color:red;">❌ Distrito não encontrado.</p>';
+        return;
+      }
+
+      const { idAreaAviso, local } = entrada;
+
+      // Buscar alertas
+      fetch('https://api.ipma.pt/open-data/forecast/warnings/warnings_www.json')
+        .then(res => res.json())
+        .then(alertasData => {
+          const alertas = alertasData.data.filter(a => a.idAreaAviso === idAreaAviso);
+
+          // Buscar previsão local
+          fetch(`https://api.ipma.pt/open-data/forecast/meteorology/cities/daily/${globalIdLocalSelecionado}.json`)
+            .then(res => res.json())
+            .then(previsaoData => {
+              const tipoTempoId = previsaoData.data[0].idWeatherType;
+
+              // Buscar descrição do fenómeno
+              fetch('https://api.ipma.pt/open-data/weather-type-classe.json')
+                .then(res => res.json())
+                .then(tiposData => {
+                  const fenomeno = tiposData.data.find(t => t.idWeatherType === tipoTempoId)?.descIdWeatherTypePT;
+
+                  let html = `<strong>${local}</strong><br>`;
+                  
+                  if (alertas.length === 0) {
+                    html += '<p style="color:green;">✅ Sem alertas meteorológicos ativos.</p>';
+                  } else {
+                    html += '<ul>';
+                    alertas.forEach(a => {
+                      const cor = {
+                        green: '#2ca02c',
+                        yellow: '#ffcc00',
+                        orange: '#ff7f0e',
+                        red: '#d62728'
+                      }[a.awarenessLevelID] || '#999';
+
+                      html += `
+                        <li style="margin-bottom:10px;">
+                          <strong>${a.awarenessTypeName}</strong><br>
+                          <span style="color:${cor}; font-weight:bold;">Nível: ${a.awarenessLevelID.toUpperCase()}</span><br>
+                          <em>${a.startTime} → ${a.endTime}</em><br>
+                          ${a.text ? `<p>${a.text}</p>` : ''}
+                        </li>
+                      `;
+                    });
+                    html += '</ul>';
+                  }
+
+                  if (fenomeno && fenomeno.toLowerCase().includes("trovoada")) {
+                    html += `<p>⚡ <strong>Possibilidade de trovoada</strong></p>`;
+                  } else {
+                    html += `<p>📌 Fenómeno previsto: <em>${fenomeno || "Não disponível"}</em></p>`;
+                  }
+
+                  container.innerHTML += html;
+                });
+            });
+        })
+        .catch(() => {
+          container.innerHTML += '<p style="color:red;">❌ Erro ao carregar alertas meteorológicos.</p>';
         });
-        html += '</ul>';
-        container.innerHTML += html;
-      })
-      .catch(() => {
-        container.innerHTML += '<p style="color:red;">❌ Sem alertas meteorológicos.</p>';
-      });
-  }
+    })
+    .catch(() => {
+      container.innerHTML += '<p style="color:red;">❌ Erro ao obter dados de distritos.</p>';
+    });
+}
 
   function mostrarRiscoIncendio() {
     const container = document.getElementById('riscoIncendio');
