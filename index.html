@@ -512,7 +512,7 @@ function carregarSismos() {
         linha.innerHTML = `
           <td>${sismo.time || '—'}</td>
           <td>${sismo.local && sismo.local.trim() !== '' ? sismo.local : '—'}</td>
-          <td>${sismo.magnitud ?? '—'}</td>
+          <td>${sismo.magnitud || '—'}</td>
           <td>${sismo.depth ? `${sismo.depth} km` : '—'}</td>
           <td>${sismo.lat} N, ${sismo.lon} W</td>
         `;
