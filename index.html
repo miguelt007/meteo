@@ -282,8 +282,8 @@ function carregarPainelAlerta(globalIdLocalSelecionado) {
         return;
       }
 
-      const nomeDistrito = entrada.local.trim();
-      const idAreaAvisoCodigo = entrada.idAreaAviso?.trim().toUpperCase();
+      const nomeDistrito = entrada.local.trim();               // ex: "Lisboa"
+      const idAreaAvisoCodigo = entrada.idAreaAviso?.trim();   // ex: "LSB"
 
       Promise.all([
         fetch('https://api.ipma.pt/open-data/forecast/warnings/warnings_www.json').then(r => r.json()),
@@ -310,7 +310,7 @@ function carregarPainelAlerta(globalIdLocalSelecionado) {
               yellow: '#ffcc00',
               orange: '#ff7f0e',
               red: '#d62728'
-            }[a.awarenessLevelID] || '#999';
+            }[a.awarenessLevelID?.toLowerCase()] || '#999';
 
             html += `
               <li style="margin-bottom:10px;">
