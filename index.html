@@ -418,9 +418,9 @@ document.getElementById('ventoInfo').innerHTML = ventoHTML;
         const { idAreaAviso, local } = entrada;
 
        Promise.all([
-      fetch('https://api.ipma.pt/open-data/forecast/warnings/warnings_www.json').then(r => r.json()),
+      fetch(`https://api.ipma.pt/open-data/forecast/warnings/warnings_www.json`).then(r => r.json()),
       fetch(`https://api.ipma.pt/open-data/forecast/meteorology/cities/daily/${globalIdLocalSelecionado}.json`).then(r => r.json()),
-      fetch('https://api.ipma.pt/open-data/weather-type-classe.json').then(r => r.json())
+      fetch(`https://api.ipma.pt/open-data/weather-type-classe.json`).then(r => r.json())
     ])
         
         .then(([alertasData, previsaoData, tiposData]) => {
