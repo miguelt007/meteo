@@ -282,7 +282,7 @@ function carregarPainelAlerta(globalIdLocalSelecionado) {
         return;
       }
 
-      const local = entrada.local.trim().toUpperCase(); // exemplo: LISBOA
+      const nomeDistrito = entrada.local.trim().toUpperCase();
 
       Promise.all([
         fetch('https://api.ipma.pt/open-data/forecast/warnings/warnings_www.json').then(r => r.json()),
@@ -290,8 +290,8 @@ function carregarPainelAlerta(globalIdLocalSelecionado) {
         fetch('https://api.ipma.pt/open-data/weather-type-classe.json').then(r => r.json())
       ])
       .then(([alertasData, previsaoData, tiposData]) => {
-        const alertasVisiveis = Array.isArray(alertasData?.[local])
-          ? alertasData[local]
+        const alertasVisiveis = Array.isArray(alertasData?.[nomeDistrito])
+          ? alertasData[nomeDistrito]
           : [];
 
         const tipoTempoId = previsaoData.data?.[0]?.idWeatherType;
@@ -342,6 +342,7 @@ function carregarPainelAlerta(globalIdLocalSelecionado) {
     });
 }
 </script>
+
   
 <script>
 function carregarSismos() {
