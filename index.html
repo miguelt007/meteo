@@ -259,7 +259,7 @@ const alertasVisiveis = alertas.length > 0 ? alertas : alertasData.data;
         console.error("❌ Falha ao obter dados da API:", err);
         container.innerHTML += '<p style="color:red;">❌ Erro ao carregar dados meteorológicos (ver consola).</p>';
       });
-  
+  }
     .catch(err => {
       console.error("❌ Erro ao obter distritos:", err);
       container.innerHTML += '<p style="color:red;">❌ Erro ao obter dados de distritos (ver consola).</p>';
