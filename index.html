@@ -187,11 +187,16 @@ function carregarPainelAlerta(globalIdLocalSelecionado) {
       }
 
       const { idAreaAviso, local } = entrada;
+console.log("ID selecionado:", globalIdLocalSelecionado);
 
       Promise.all([
         fetch('https://api.ipma.pt/open-data/forecast/warnings/warnings_www.json').then(r => r.json()),
+        console.log("ID selecionado:", globalIdLocalSelecionado);
         fetch(`https://api.ipma.pt/open-data/forecast/meteorology/cities/daily/${globalIdLocalSelecionado}.json`).then(r => r.json()),
+          console.log("ID selecionado:", globalIdLocalSelecionado);
         fetch('https://api.ipma.pt/open-data/weather-type-classe.json').then(r => r.json())
+      console.log("ID selecionado:", globalIdLocalSelecionado);
+
       ])
       .then(([alertasData, previsaoData, tiposData]) => {
         const alertas = alertasData.data.filter(a => a.idAreaAviso === idAreaAviso);
