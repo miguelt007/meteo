@@ -267,7 +267,8 @@ function carregarPrevisao(globalIdLocal) {
     });
 }
 </script>
-<script>
+
+  <script>
 function carregarPainelAlerta(globalIdLocalSelecionado) {
   const container = document.getElementById('alertas');
   container.innerHTML = '<h3>⚠️ Alertas Meteorológicos</h3>';
@@ -282,6 +283,7 @@ function carregarPainelAlerta(globalIdLocalSelecionado) {
       }
 
       const { local } = entrada;
+      const nomeNormalizado = local.trim().toLowerCase();
 
       Promise.all([
         fetch('https://api.ipma.pt/open-data/forecast/warnings/warnings_www.json').then(r => r.json()),
@@ -300,9 +302,8 @@ function carregarPainelAlerta(globalIdLocalSelecionado) {
           return;
         }
 
-        // ⚙️ Filtro baseado no nome do distrito (mais fiável que idAreaAviso)
         const alertasVisiveis = listaAlertas.filter(a =>
-          a.name?.toLowerCase().includes(local.toLowerCase())
+          a.name?.trim().toLowerCase() === nomeNormalizado
         );
 
         const tipoTempoId = previsaoData.data?.[0]?.idWeatherType;
