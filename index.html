@@ -173,6 +173,7 @@
     carregarPrevisao(select.value);
   });
 
+  <script>
 function carregarPainelAlerta(globalIdLocalSelecionado) {
   const container = document.getElementById('alertas');
   container.innerHTML = '<h3>⚠️ Alertas Meteorológicos</h3>';
@@ -187,16 +188,21 @@ function carregarPainelAlerta(globalIdLocalSelecionado) {
       }
 
       const { idAreaAviso, local } = entrada;
-console.log("ID selecionado:", globalIdLocalSelecionado);
 
       Promise.all([
         fetch('https://api.ipma.pt/open-data/forecast/warnings/warnings_www.json').then(r => r.json()),
         fetch(`https://api.ipma.pt/open-data/forecast/meteorology/cities/daily/${globalIdLocalSelecionado}.json`).then(r => r.json()),
         fetch('https://api.ipma.pt/open-data/weather-type-classe.json').then(r => r.json())
-     
       ])
       .then(([alertasData, previsaoData, tiposData]) => {
-         console.log("🔍 Dados recebidos:", data);
+        console.log("🔍 Dados recebidos:", previsaoData);
+
+        // 🔒 Verificação segura antes de usar previsaoData.data[0]
+        if (!previsaoData || !previsaoData.data || previsaoData.data.length === 0) {
+          container.innerHTML += '<p style="color:red;">❌ Não há dados meteorológicos disponíveis para esta cidade.</p>';
+          return;
+        }
+
         const alertas = alertasData.data.filter(a => a.idAreaAviso === idAreaAviso);
         const tipoTempoId = previsaoData.data[0].idWeatherType;
         const fenomeno = tiposData.data.find(t => t.idWeatherType === tipoTempoId)?.descIdWeatherTypePT;
@@ -235,15 +241,18 @@ console.log("ID selecionado:", globalIdLocalSelecionado);
 
         container.innerHTML += html;
       })
-      .catch(() => {
-        container.innerHTML += '<p style="color:red;">❌ Erro ao carregar dados meteorológicos.</p>';
+      .catch(err => {
+        console.error("❌ Falha ao obter dados da API:", err);
+        container.innerHTML += '<p style="color:red;">❌ Erro ao carregar dados meteorológicos (ver consola).</p>';
       });
     })
-    .catch(() => {
-      container.innerHTML += '<p style="color:red;">❌ Erro ao obter dados de distritos.</p>';
+    .catch(err => {
+      console.error("❌ Erro ao obter distritos:", err);
+      container.innerHTML += '<p style="color:red;">❌ Erro ao obter dados de distritos (ver consola).</p>';
     });
 }
 </script>
+
  <script> 
   function carregarPrevisao(globalIdLocal) {
     const url = `https://api.ipma.pt/open-data/forecast/meteorology/cities/daily/${globalIdLocal}.json`;
