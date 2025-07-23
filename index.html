@@ -268,11 +268,12 @@ function carregarPrevisao(globalIdLocal) {
 }
 </script>
 
-  <script>
+ <script>
 function carregarPainelAlerta(globalIdLocalSelecionado) {
   const container = document.getElementById('alertas');
   container.innerHTML = '<h3>⚠️ Alertas Meteorológicos</h3>';
 
+  // 1️⃣ Obter lista de distritos para localizar nome correto
   fetch('https://api.ipma.pt/open-data/distrits-islands.json')
     .then(res => res.json())
     .then(lista => {
@@ -282,8 +283,9 @@ function carregarPainelAlerta(globalIdLocalSelecionado) {
         return;
       }
 
-      const nomeDistrito = entrada.local.trim().toUpperCase();
+      const nomeDistrito = entrada.local.trim().toUpperCase(); // ex: LISBOA
 
+      // 2️⃣ Agora que temos nomeDistrito, podemos carregar tudo o resto
       Promise.all([
         fetch('https://api.ipma.pt/open-data/forecast/warnings/warnings_www.json').then(r => r.json()),
         fetch(`https://api.ipma.pt/open-data/forecast/meteorology/cities/daily/${globalIdLocalSelecionado}.json`).then(r => r.json()),
@@ -293,16 +295,14 @@ function carregarPainelAlerta(globalIdLocalSelecionado) {
         const alertasVisiveis = Array.isArray(alertasData?.[nomeDistrito])
           ? alertasData[nomeDistrito]
           : [];
-        const nomeDistrito = entrada.local.trim().toUpperCase();
-        const debugData = alertasData[nomeDistrito];
 
-container.innerHTML += `
-  <details style="margin-top:20px; background:#f9f9f9; padding:10px; border:1px solid #ccc;">
-    <summary style="cursor:pointer; font-weight:bold;">🔍 Ver dados brutos da API para ${nomeDistrito}</summary>
-    <pre style="font-size:12px; white-space:pre-wrap;">${JSON.stringify(debugData, null, 2)}</pre>
-  </details>
-`;
-        console.log("📋 Chaves disponíveis na API:", Object.keys(alertasData));
+        // 📦 Painel de debug opcional — mostra dados brutos da API
+        container.innerHTML += `
+          <details style="margin-top:20px; background:#f0f0f0; padding:10px; border:1px solid #ccc;">
+            <summary style="cursor:pointer; font-weight:bold;">🔍 Ver dados brutos da API para ${nomeDistrito}</summary>
+            <pre style="font-size:12px; white-space:pre-wrap;">${JSON.stringify(alertasVisiveis, null, 2)}</pre>
+          </details>
+        `;
 
         const tipoTempoId = previsaoData.data?.[0]?.idWeatherType;
         const fenomeno = tiposData?.data?.find(t => t.idWeatherType === tipoTempoId)?.descIdWeatherTypePT;
@@ -323,8 +323,8 @@ container.innerHTML += `
 
             html += `
               <li style="margin-bottom:10px;">
-                <strong>${a.awarenessTypeName}</strong><br>
-                <span style="color:${cor}; font-weight:bold;">Nível: ${a.awarenessLevelID.toUpperCase()}</span><br>
+                <strong>${a.awarenessTypeName || 'Alerta Meteorológico'}</strong><br>
+                <span style="color:${cor}; font-weight:bold;">Nível: ${a.awarenessLevelID?.toUpperCase() || '—'}</span><br>
                 <em>${a.startTime} → ${a.endTime}</em><br>
                 ${a.text ? `<p>${a.text}</p>` : ''}
               </li>
@@ -333,12 +333,7 @@ container.innerHTML += `
           html += '</ul>';
         }
 
-        if (fenomeno && fenomeno.toLowerCase().includes("trovoada")) {
-          html += `<p>⚡ <strong>Possibilidade de trovoada</strong></p>`;
-        } else {
-          html += `<p>📌 Fenómeno previsto: <em>${fenomeno || "Não disponível"}</em></p>`;
-        }
-
+        html += `<p>📌 Fenómeno previsto: <em>${fenomeno || "Não disponível"}</em></p>`;
         container.innerHTML += html;
       })
       .catch(err => {
@@ -352,7 +347,6 @@ container.innerHTML += `
     });
 }
 </script>
-
   
 <script>
 function carregarSismos() {
