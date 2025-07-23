@@ -464,21 +464,38 @@ function mostrarRiscoIncendio() {
 </script>
 
   <script>
+<script>
 function carregarSismos() {
   fetch('https://api.ipma.pt/open-data/observation/seismic/3.json')
     .then(res => res.text())
     .then(texto => {
-      console.log("📦 Resposta crua da API:", texto);
-
-      let dataJSON;
-
       try {
-        dataJSON = JSON.parse(texto);
+        const data = JSON.parse(texto);
+        const sismos = Array.isArray(data.data) ? data.data.slice(0, 10) : [];
+        const tbody = document.querySelector('#tabelaSismos tbody');
+        tbody.innerHTML = '';
+
+        sismos.forEach(sismo => {
+          const linha = document.createElement('tr');
+          linha.innerHTML = `
+            <td>${sismo.time || '—'}</td>
+            <td>${sismo.local && sismo.local.trim() !== '' ? sismo.local : '—'}</td>
+            <td>${sismo.magnitud || '—'}</td>
+            <td>${sismo.depth ? `${sismo.depth} km` : '—'}</td>
+            <td>${sismo.lat} N, ${sismo.lon} W</td>
+          `;
+          tbody.appendChild(linha);
+        });
       } catch (err) {
-        console.error("❌ Erro ao fazer parse do JSON:", err);
-        document.getElementById('sismos').innerHTML += '<p style="color:red;">❌ Resposta inválida da API (ver consola).</p>';
-        return;
+        console.error("❌ Erro ao interpretar os dados:", err);
+        document.getElementById('sismos').innerHTML += '<p style="color:red;">❌ Dados sísmicos inválidos.</p>';
       }
+    })
+    .catch(err => {
+      console.error("❌ Erro na API de sismos:", err);
+      document.getElementById('sismos').innerHTML += '<p style="color:red;">❌ Falha ao obter dados sísmicos.</p>';
+    });
+}
 
       const sismos = Array.isArray(dataJSON.data) ? dataJSON.data.slice(0, 10) : [];
       const tbody = document.querySelector('#tabelaSismos tbody');
