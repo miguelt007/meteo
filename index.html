@@ -200,14 +200,19 @@ function carregarPainelAlerta(globalIdLocalSelecionado) {
           return;
         }
 
-        if (!alertasData || !Array.isArray(alertasData.data)) {
-          container.innerHTML += '<p style="color:red;">❌ Dados de alertas indisponíveis ou malformados.</p>';
-          return;
-        }
+        if (!Array.isArray(alertasData?.data)) {
+  console.warn("⚠️ Estrutura inesperada em alertasData:", alertasData);
+  container.innerHTML += '<p style="color:red;">❌ Estrutura inesperada nos dados de alertas.</p>';
+  return;
+}
 
-        const alertas = Array.isArray(alertasData.data)
-          ? alertasData.data.filter(a => a.idAreaAviso === idAreaAviso)
-          : [];
+const alertas = alertasData.data.filter(a => {
+  // comparar como string para tolerância máxima
+  return String(a.idAreaAviso).toUpperCase() === String(idAreaAviso).toUpperCase();
+});
+
+// se ainda assim não houver correspondência, mostra todos
+const alertasVisiveis = alertas.length > 0 ? alertas : alertasData.data;
 
         const tipoTempoId = previsaoData.data[0].idWeatherType;
         const fenomeno = tiposData?.data?.find(t => t.idWeatherType === tipoTempoId)?.descIdWeatherTypePT;
