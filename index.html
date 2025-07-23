@@ -268,19 +268,20 @@ function carregarPrevisao(globalIdLocal) {
 }
 </script>
 
-    <script>
-   <div id="alertasAtivos"></div>
-  function mostrarDistritosComAlertas() {
+    <!-- Local onde os alertas ativos vão ser mostrados -->
+<div id="alertasAtivos"></div>
+
+<script>
+function mostrarDistritosComAlertas() {
   const container = document.getElementById('alertasAtivos');
   container.innerHTML = '<h3>📍 Distritos com Alertas Ativos</h3>';
 
   fetch('https://api.ipma.pt/open-data/forecast/warnings/warnings_www.json')
     .then(r => r.json())
     .then(alertasData => {
-      // Combina alertas de estrutura por chave e por array
       const conjuntos = [];
 
-      // 1️⃣ Alertas por chave (tipo "LSB")
+      // 🔹 Estrutura 1: por chave (ex: "LSB")
       for (const codigo in alertasData) {
         if (Array.isArray(alertasData[codigo]) && alertasData[codigo].length > 0) {
           const nome = alertasData[codigo][0]?.name || codigo;
@@ -288,7 +289,7 @@ function carregarPrevisao(globalIdLocal) {
         }
       }
 
-      // 2️⃣ Alertas por array global (tipo data[])
+      // 🔹 Estrutura 2: array global ("data")
       if (Array.isArray(alertasData?.data)) {
         const agrupados = {};
         alertasData.data.forEach(a => {
@@ -307,7 +308,7 @@ function carregarPrevisao(globalIdLocal) {
         return;
       }
 
-      conjuntos.sort((a, b) => a.nome.localeCompare(b.nome)); // Ordena alfabeticamente
+      conjuntos.sort((a, b) => a.nome.localeCompare(b.nome));
 
       const html = conjuntos.map(grupo => {
         const nome = grupo.nome;
@@ -343,7 +344,13 @@ function carregarPrevisao(globalIdLocal) {
       container.innerHTML += '<p style="color:red;">❌ Falha ao carregar distritos com alertas (ver consola).</p>';
     });
 }
+
+// ⚙️ Ativar painel ao carregar a página
+window.addEventListener('DOMContentLoaded', () => {
+  mostrarDistritosComAlertas();
+});
 </script>
+
   
 <script>
 function carregarPainelAlerta(globalIdLocalSelecionado) {
